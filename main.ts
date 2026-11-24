@@ -742,11 +742,14 @@ function parseV4a(lines: string[], strict: boolean): Edit[] {
       let j = i + 1;
       while (j < last && !isSectionStart(lines[j]!)) {
         const x = lines[j]!;
-        if (x.startsWith('+') || blank(x)) raw.push(x);
+        // SPEC section 8: an Add File section's lines start with `+`, or are empty
+        // (an empty line of the file). A line of only whitespace is neither, so it is
+        // a parse fault, not an empty line.
+        if (x.startsWith('+') || x === '') raw.push(x);
         else throw new Exit2(`error: parse ${j + 1}`);
         j += 1;
       }
-      while (raw.length > 0 && blank(raw[raw.length - 1]!)) raw.pop();
+      while (raw.length > 0 && raw[raw.length - 1]! === '') raw.pop();
       const fileLines = raw.map((x) => (x.startsWith('+') ? x.slice(1) : ''));
       edits.push(v4AddEdit(path, fileLines));
       i = j;
